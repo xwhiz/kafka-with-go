@@ -55,9 +55,18 @@ func handleConnection(conn net.Conn) {
 		reader = bytes.NewReader(data[8:12])
 		_ = binary.Read(reader, binary.BigEndian, &correlationId)
 
+		var errorCode int16 = -1
+		if requestApiVersion < 0 || requestApiVersion > 4 {
+			errorCode = 35
+		}
+
 		buf := new(bytes.Buffer)
 		binary.Write(buf, binary.BigEndian, messageSize)
 		binary.Write(buf, binary.BigEndian, correlationId)
+
+		if errorCode != -1 {
+			binary.Write(buf, binary.BigEndian, errorCode)
+		}
 
 		conn.Write(buf.Bytes())
 	}
