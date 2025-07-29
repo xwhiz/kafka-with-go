@@ -39,12 +39,21 @@ func handleConnection(conn net.Conn) {
 
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
-		text := scanner.Text()
+		data := scanner.Bytes()
 
-		fmt.Println("Here is what i received:", text)
+		fmt.Println("Here is what i received:", data)
 
-		messageSize := int32(0)
-		correlationId := int32(7)
+		var messageSize, correlationId int32
+		var requestApiKey, requestApiVersion int16
+
+		reader := bytes.NewReader(data[:4])
+		_ = binary.Read(reader, binary.BigEndian, &messageSize)
+		reader = bytes.NewReader(data[4:6])
+		_ = binary.Read(reader, binary.BigEndian, &requestApiKey)
+		reader = bytes.NewReader(data[6:8])
+		_ = binary.Read(reader, binary.BigEndian, &requestApiVersion)
+		reader = bytes.NewReader(data[8:12])
+		_ = binary.Read(reader, binary.BigEndian, &correlationId)
 
 		buf := new(bytes.Buffer)
 		binary.Write(buf, binary.BigEndian, messageSize)
