@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"net"
@@ -37,10 +38,10 @@ func main() {
 		messageSize := int32(0)
 		correlationId := int32(7)
 
-		buf := make([]byte, 8)
-		binary.BigEndian.AppendUint32(buf[:4], uint32(messageSize))
-		binary.BigEndian.AppendUint32(buf[4:], uint32(correlationId))
+		buf := new(bytes.Buffer)
+		binary.Write(buf, binary.BigEndian, messageSize)
+		binary.Write(buf, binary.BigEndian, correlationId)
 
-		conn.Write(buf)
+		conn.Write(buf.Bytes())
 	}
 }
