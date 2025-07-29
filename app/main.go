@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"encoding/binary"
 	"fmt"
 	"net"
 	"os"
@@ -19,9 +21,26 @@ func main() {
 		fmt.Println("Failed to bind to port 9092")
 		os.Exit(1)
 	}
-	_, err = l.Accept()
+	conn, err := l.Accept()
 	if err != nil {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
+	}
+	defer conn.Close()
+
+	scanner := bufio.NewScanner(conn)
+	for scanner.Scan() {
+		text := scanner.Text()
+
+		fmt.Println("Here is what i received:", text)
+
+		messageSize := int32(0)
+		correlationId := int32(7)
+
+		buf := make([]byte, 8)
+		binary.BigEndian.AppendUint32(buf[:4], uint32(messageSize))
+		binary.BigEndian.AppendUint32(buf[4:], uint32(correlationId))
+
+		conn.Write(buf)
 	}
 }
